@@ -6,16 +6,18 @@ int PUMP = A3;
 ProtocolController* protocolController;
 
 void activatePump() {
-    analogWrite(PUMP, 4096);
+    analogWrite(PUMP, 4095);
 }
 
 int execute(String json) {
     StaticJsonBuffer<250> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject((char*)json.c_str());
     JsonArray& valves = root["i"];
+    int totalDuration = 0;
     for (int i = 0; i < valves.size(); i++) {
         int valveId = valves[i]["id"];
         int duration = valves[i]["d"];
+        totalDuration += duration;
         // openValveWithId(valveId);
         activatePump();
         delay(duration*1000);
@@ -23,7 +25,7 @@ int execute(String json) {
         // closeValveWithId(valveId);
     }
 
-    return 1;
+    return totalDuration;
  }
 
 int openValve(String idString) {
@@ -69,7 +71,7 @@ void setup() {
     Serial.begin(9600);
     Serial1.begin(9600);
 
-    identifyAllSlaves();
+    // identifyAllSlaves();
 }
 
 void processDatagram(Datagram* msg) {
