@@ -5,7 +5,7 @@ ProtocolController::ProtocolController(Stream* comm) {
     this->comm = comm;
 }
 
-bool ProtocolController::sendMessage(Message* msg, int identity) {
+bool ProtocolController::sendDatagram(Datagram* msg, int identity) {
   if (sendSynAndWaitForAck(comm)) {
     comm->write(msg->destination);
     comm->write(msg->command);

@@ -39,15 +39,15 @@ int deactivatePump() {
 }
 
 int openValveWithId(int valveId) {
-    Message* msg = new Message(valveId, OPEN_VALVE, NOOP);
-    protocolController->sendMessage(msg, MASTER);
+    Datagram* msg = new Datagram(valveId, OPEN_VALVE, NOOP);
+    protocolController->sendDatagram(msg, MASTER);
     getResponse();
     return 1;
 }
 
 int closeValveWithId(int valveId) {
-    Message* msg = new Message(valveId, CLOSE_VALVE, NOOP);
-    protocolController->sendMessage(msg, MASTER);
+    Datagram* msg = new Datagram(valveId, CLOSE_VALVE, NOOP);
+    protocolController->sendDatagram(msg, MASTER);
     getResponse();
     return 1;
 }
@@ -55,8 +55,8 @@ int closeValveWithId(int valveId) {
 void identifyAllSlaves() {
     Particle.publish("Trying to identify slaves");
 
-    Message* msg = new Message(EVERYONE, IDENTIFY, NOOP);
-    protocolController->sendMessage(msg, MASTER);
+    Datagram* msg = new Datagram(EVERYONE, IDENTIFY, NOOP);
+    protocolController->sendDatagram(msg, MASTER);
 }
 
 void setup() {
@@ -72,7 +72,7 @@ void setup() {
     identifyAllSlaves();
 }
 
-void processMessage(Message* msg) {
+void processDatagram(Datagram* msg) {
     Particle.publish("slaveIdentified", String(msg->arg));
 
     Serial.write(msg->destination);
@@ -84,11 +84,11 @@ void getResponse() {
     Particle.publish("Listening for response");
     protocolController->waitForSynAndSendAck();
     Particle.publish("Recieved a SYN");
-    int* messageBytes = protocolController->readBytes(&Serial1, MAX_MSG_LEN);
-    Message* message = Message::parse(messageBytes);
-    free(messageBytes);
-    processMessage(message);
-    delete message;
+    int* datagramBytes = protocolController->readBytes(&Serial1, MAX_MSG_LEN);
+    Datagram* datagram = Datagram::parse(datagramBytes);
+    free(datagramBytes);
+    processDatagram(datagram);
+    delete datagram;
 }
 void loop() {
     getResponse();

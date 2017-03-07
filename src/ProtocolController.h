@@ -1,5 +1,11 @@
+#include "Particle.h"
+
+#pragma once
+
 #ifndef PROTOCOL_CONTROLLER
 #define PROTOCOL_CONTROLLER
+
+#include "chain-gang-protocol.h"
 
 class ProtocolController : public CGPInterface {
     private:
@@ -7,7 +13,7 @@ class ProtocolController : public CGPInterface {
     public:
         ProtocolController(Stream* comm);
 
-        bool sendMessage(Message* msg, int identity);
+        bool sendDatagram(Datagram* msg, int identity);
         bool sendSynAndWaitForAck(Stream*);
         Stream* waitForSynAndSendAck();
 };
