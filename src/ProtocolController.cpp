@@ -15,20 +15,6 @@ bool ProtocolController::sendDatagram(Datagram* msg, int identity) {
   return false;
 }
 
-bool ProtocolController::sendSynAndWaitForAck(Stream* stream) {
-  int tryCount = 0;
-  do {
-    stream->write(SYN);
-    Serial.println("Sending SYN");
-    delay(100);
-    if (tryCount++ == 30) {
-      return false;
-    }
-  } while (comm->available() == 0 || comm->read() != ACK);
-  Serial.println("Recieved ACK");
-  return true;
-}
-
 Stream* ProtocolController::waitForSynAndSendAck() {
      while(true) {
         if (comm->available() > 0) {

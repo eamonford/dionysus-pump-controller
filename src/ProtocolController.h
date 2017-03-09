@@ -12,9 +12,7 @@ class ProtocolController : public CGPInterface {
         Stream* comm;
     public:
         ProtocolController(Stream* comm);
-
         bool sendDatagram(Datagram* msg, int identity);
-        bool sendSynAndWaitForAck(Stream*);
         Stream* waitForSynAndSendAck();
 };
 
