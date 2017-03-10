@@ -29,6 +29,6 @@ Stream* ProtocolController::waitForSynAndSendAck() {
             }
             return comm;
         }
-        delay(300);
+        delay(30);
     }
 }

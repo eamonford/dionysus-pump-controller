@@ -17,12 +17,13 @@ int execute(String json) {
     for (int i = 0; i < valves.size(); i++) {
         int valveId = valves[i]["id"];
         int duration = valves[i]["d"];
-        totalDuration += duration;
-        // openValveWithId(valveId);
-        activatePump();
-        delay(duration*1000);
-        deactivatePump();
-        // closeValveWithId(valveId);
+        if (openValveWithId(valveId)) {
+          totalDuration += duration;
+          activatePump();
+          delay(duration*1000);
+          deactivatePump();
+          closeValveWithId(valveId);
+        }
     }
 
     return totalDuration;
@@ -42,16 +43,16 @@ int deactivatePump() {
 
 int openValveWithId(int valveId) {
     Datagram* msg = new Datagram(valveId, OPEN_VALVE, NOOP);
-    protocolController->sendDatagram(msg, MASTER);
-    getResponse();
-    return 1;
+    bool result = protocolController->sendDatagram(msg, MASTER);
+    // getResponse();
+    if (result) return 1; else return 0;
 }
 
 int closeValveWithId(int valveId) {
     Datagram* msg = new Datagram(valveId, CLOSE_VALVE, NOOP);
-    protocolController->sendDatagram(msg, MASTER);
-    getResponse();
-    return 1;
+    bool result = protocolController->sendDatagram(msg, MASTER);
+    // getResponse();
+    if (result) return 1; else return 0;
 }
 
 void identifyAllSlaves() {
@@ -75,17 +76,13 @@ void setup() {
 }
 
 void processDatagram(Datagram* msg) {
-    Particle.publish("slaveIdentified", String(msg->arg));
-
     Serial.write(msg->destination);
     Serial.write(msg->command);
     Serial.write(msg->arg);
 }
 
 void getResponse() {
-    Particle.publish("Listening for response");
     protocolController->waitForSynAndSendAck();
-    Particle.publish("Recieved a SYN");
     int* datagramBytes = protocolController->readBytes(&Serial1, MAX_MSG_LEN);
     Datagram* datagram = Datagram::parse(datagramBytes);
     free(datagramBytes);
