@@ -9,6 +9,30 @@ void activatePump() {
     analogWrite(PUMP, 4095);
 }
 
+void deactivatePump() {
+    analogWrite(PUMP, 0);
+}
+
+bool openValveWithId(int valveId) {
+    Datagram* request = new Datagram(valveId, OPEN_VALVE, NOOP);
+    if (!protocolController->sendDatagram(request, MASTER))
+      return false;
+    Datagram* response = getNextDatagram();
+    // TODO: do some validation on the datagram
+    delete response;
+    return true;
+}
+
+bool closeValveWithId(int valveId) {
+    Datagram* request = new Datagram(valveId, CLOSE_VALVE, NOOP);
+    if (!protocolController->sendDatagram(request, MASTER))
+      return false;
+    Datagram* response = getNextDatagram();
+    // TODO: do some validation on the datagram
+    delete response;
+    return true;
+}
+
 int execute(String json) {
     StaticJsonBuffer<250> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject((char*)json.c_str());
@@ -22,38 +46,12 @@ int execute(String json) {
           activatePump();
           delay(duration*1000);
           deactivatePump();
-          closeValveWithId(valveId);
+          if (!closeValveWithId(valveId))
+            break;
         }
     }
-
     return totalDuration;
  }
-
-int openValve(String idString) {
-    return openValveWithId(idString.toInt());
-}
-
-int closeValve(String idString) {
-    return closeValveWithId(idString.toInt());
-}
-
-int deactivatePump() {
-    analogWrite(PUMP, 0);
-}
-
-int openValveWithId(int valveId) {
-    Datagram* msg = new Datagram(valveId, OPEN_VALVE, NOOP);
-    bool result = protocolController->sendDatagram(msg, MASTER);
-    // getResponse();
-    if (result) return 1; else return 0;
-}
-
-int closeValveWithId(int valveId) {
-    Datagram* msg = new Datagram(valveId, CLOSE_VALVE, NOOP);
-    bool result = protocolController->sendDatagram(msg, MASTER);
-    // getResponse();
-    if (result) return 1; else return 0;
-}
 
 void identifyAllSlaves() {
     Particle.publish("Trying to identify slaves");
@@ -64,8 +62,6 @@ void identifyAllSlaves() {
 
 void setup() {
     Particle.function("execute", execute);
-    Particle.function("openValve", openValve);
-    Particle.function("closeValve", closeValve);
 
     protocolController = new ProtocolController(&Serial1);
     pinMode(PUMP, OUTPUT);
@@ -75,20 +71,15 @@ void setup() {
     // identifyAllSlaves();
 }
 
-void processDatagram(Datagram* msg) {
-    Serial.write(msg->destination);
-    Serial.write(msg->command);
-    Serial.write(msg->arg);
-}
-
-void getResponse() {
+Datagram* getNextDatagram() {
     protocolController->waitForSynAndSendAck();
     int* datagramBytes = protocolController->readBytes(&Serial1, MAX_MSG_LEN);
     Datagram* datagram = Datagram::parse(datagramBytes);
     free(datagramBytes);
-    processDatagram(datagram);
-    delete datagram;
+    return datagram;
 }
+
 void loop() {
-    getResponse();
+    Datagram * datagram = getNextDatagram();
+    delete datagram;
 }
