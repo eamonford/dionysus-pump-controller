@@ -21,9 +21,9 @@ bool openValveWithId(int valveId) {
     if (!protocolController->sendDatagram(request, MASTER))
       return false;
     Datagram* response = getNextDatagram();
-    // TODO: do some validation on the datagram
+    bool success = response->command == OPEN_VALVE;
     delete response;
-    return true;
+    return success;
 }
 
 bool closeValveWithId(int valveId) {
@@ -31,9 +31,9 @@ bool closeValveWithId(int valveId) {
     if (!protocolController->sendDatagram(request, MASTER))
       return false;
     Datagram* response = getNextDatagram();
-    // TODO: do some validation on the datagram
+    bool success = response->command == CLOSE_VALVE;
     delete response;
-    return true;
+    return success;
 }
 
 int execute(String json) {
