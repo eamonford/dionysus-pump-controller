@@ -15,20 +15,10 @@ bool ProtocolController::sendDatagram(Datagram* msg, int identity) {
   return false;
 }
 
-Stream* ProtocolController::waitForSynAndSendAck() {
-     while(true) {
-        if (comm->available() > 0) {
-            Serial.write(comm->peek());
-        }
-
-        if (comm->available() > 0 && comm->read() == SYN) {
-            comm->write(ACK);
-             // Eat up any extra SYNs that got sent during the delay
-            while (comm->available() > 0 && comm->peek() == SYN) {
-                comm->read();
-            }
-            return comm;
-        }
-        delay(30);
-    }
+Datagram* ProtocolController::getDatagram() {
+    waitForSynAndSendAck(comm);
+    int* datagramBytes = readBytes(comm, MAX_MSG_LEN);
+    Datagram* datagram = Datagram::parse(datagramBytes);
+    free(datagramBytes);
+    return datagram;
 }

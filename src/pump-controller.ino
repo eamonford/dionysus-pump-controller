@@ -20,7 +20,7 @@ bool openValveWithId(int valveId) {
     Datagram* request = new Datagram(valveId, OPEN_VALVE, NOOP);
     if (!protocolController->sendDatagram(request, MASTER))
       return false;
-    Datagram* response = getNextDatagram();
+    Datagram* response = protocolController->getDatagram();
     bool success = response->command == OPEN_VALVE;
     delete response;
     return success;
@@ -30,7 +30,7 @@ bool closeValveWithId(int valveId) {
     Datagram* request = new Datagram(valveId, CLOSE_VALVE, NOOP);
     if (!protocolController->sendDatagram(request, MASTER))
       return false;
-    Datagram* response = getNextDatagram();
+    Datagram* response = protocolController->getDatagram();
     bool success = response->command == CLOSE_VALVE;
     delete response;
     return success;
@@ -59,7 +59,7 @@ int execute(String json) {
 bool assignValveId(int id) {
   Datagram* datagram = new Datagram(FIRST_UNIDENTIFIED, SET_ID, id);
   protocolController->sendDatagram(datagram, MASTER);
-  Datagram* response = getNextDatagram();
+  Datagram* response = protocolController->getDatagram();
   return response->command == SET_ID && response->arg == id;
 }
 
@@ -79,7 +79,7 @@ void identifyAllSlaves() {
 
     vector<int>* valveIds = new vector<int>();
     Datagram* response;
-    while ((response = getNextDatagram())->command != END_OF_CHAIN) {
+    while ((response = protocolController->getDatagram())->command != END_OF_CHAIN) {
       // if a valve is unidentified, mark it as needing to be assigned an ID
       if (response->command == IDENTIFY)
         valveIds->push_back(response->arg);
@@ -109,15 +109,7 @@ void setup() {
     identifyAllSlaves();
 }
 
-Datagram* getNextDatagram() {
-    protocolController->waitForSynAndSendAck();
-    int* datagramBytes = protocolController->readBytes(&Serial1, MAX_MSG_LEN);
-    Datagram* datagram = Datagram::parse(datagramBytes);
-    free(datagramBytes);
-    return datagram;
-}
-
 void loop() {
-    Datagram * datagram = getNextDatagram();
+    Datagram * datagram = protocolController->getDatagram();
     delete datagram;
 }

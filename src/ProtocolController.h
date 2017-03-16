@@ -1,7 +1,5 @@
 #include "Particle.h"
 
-#pragma once
-
 #ifndef PROTOCOL_CONTROLLER
 #define PROTOCOL_CONTROLLER
 
@@ -12,8 +10,9 @@ class ProtocolController : public CGPInterface {
         Stream* comm;
     public:
         ProtocolController(Stream* comm);
+
         bool sendDatagram(Datagram* msg, int identity);
-        Stream* waitForSynAndSendAck();
+        Datagram* getDatagram();
 };
 
 #endif
