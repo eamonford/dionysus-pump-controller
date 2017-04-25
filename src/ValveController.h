@@ -1,22 +1,26 @@
 #ifndef VALVE_CONTROLLER_H_
-#define VALVE_CONTROLLER_H
+#define VALVE_CONTROLLER_H_
 
-#include "ProtocolController.h"
+#include "application.h"
+#include "Particle.h"
+#include "chain-gang-protocol.h"
 
 using namespace std;
 
-class ValveController {
+class ValveController : public CGPDelegateInterface {
 private:
-  ProtocolController* protocolController;
+  CGP* cgp;
+  Datagram* lastDatagramReceived;
+  void processDatagram(Datagram* datagram);
+  int getStreamIndexForDatagram(Datagram* datagram);
+  bool shouldForwardDatagram(Datagram* datagram);
 
 public:
-  ValveController(ProtocolController* newProtocolController);
-
   bool assignValveId(int id);
   bool openValveWithId(int valveId);
   bool closeValveWithId(int valveId);
-
   vector<int>* identifyAllSlaves();
+  ValveController(Stream *s);
 };
 
 #endif

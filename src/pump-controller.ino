@@ -1,4 +1,5 @@
-#include "ProtocolController.h"
+// #include "ProtocolController.h"
+#include "Particle.h"
 #include <SparkJson.h>
 #include "Constants.h"
 #include <vector>
@@ -7,8 +8,9 @@
 using namespace std;
 
 int PUMP = A3;
-ProtocolController* protocolController;
+// ProtocolController* protocolController;
 ValveController* valveController;
+CGP* cgp;
 
 void activatePump() {
     analogWrite(PUMP, 4095);
@@ -25,6 +27,13 @@ String generateJsonForIds(vector<int>* ids) {
   }
   idsString += "]";
   return idsString;
+}
+
+int identify(String arg) {
+  vector<int>* valveIds = valveController->identifyAllSlaves();
+  Particle.publish("valves", generateJsonForIds(valveIds));
+
+  return 1;
 }
 
 int execute(String json) {
@@ -48,19 +57,17 @@ int execute(String json) {
  }
 
 void setup() {
+    Particle.function("identify", identify);
     Particle.function("execute", execute);
     pinMode(PUMP, OUTPUT);
     Serial.begin(9600);
     Serial1.begin(9600);
 
-    protocolController = new ProtocolController(&Serial1);
-    valveController = new ValveController(protocolController);
+    // protocolController = new ProtocolController(&Serial1);
+    valveController = new ValveController(&Serial1);
 
     vector<int>* valveIds = valveController->identifyAllSlaves();
     Particle.publish("valves", generateJsonForIds(valveIds));
 }
 
-void loop() {
-    Datagram * datagram = protocolController->getDatagram();
-    delete datagram;
-}
+void loop() {}
