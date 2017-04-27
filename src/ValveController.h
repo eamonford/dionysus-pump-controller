@@ -1,7 +1,6 @@
 #ifndef VALVE_CONTROLLER_H_
 #define VALVE_CONTROLLER_H_
 
-#include "application.h"
 #include "Particle.h"
 #include "chain-gang-protocol.h"
 

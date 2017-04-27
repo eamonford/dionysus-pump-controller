@@ -1,14 +1,10 @@
-// #include "ProtocolController.h"
 #include "Particle.h"
 #include <SparkJson.h>
 #include "Constants.h"
 #include <vector>
 #include "ValveController.h"
 
-using namespace std;
-
 int PUMP = A3;
-// ProtocolController* protocolController;
 ValveController* valveController;
 CGP* cgp;
 
@@ -63,7 +59,6 @@ void setup() {
     Serial.begin(9600);
     Serial1.begin(9600);
 
-    // protocolController = new ProtocolController(&Serial1);
     valveController = new ValveController(&Serial1);
 
     vector<int>* valveIds = valveController->identifyAllSlaves();
