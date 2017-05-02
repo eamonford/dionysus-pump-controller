@@ -25,7 +25,7 @@ bool ValveController::openValveWithId(int valveId) {
     Datagram* request = new Datagram(valveId, OPEN_VALVE, NOOP);
     cgp->sendDatagram(request);
     delete request;
-    cgp->getAndProcessDatagram();
+    cgp->getAndProcessDatagram(SERIAL_TIMEOUT);
     bool success = lastDatagramReceived != NULL && lastDatagramReceived->command == OPEN_VALVE;
     delete lastDatagramReceived;
     lastDatagramReceived = NULL;
@@ -36,7 +36,7 @@ bool ValveController::closeValveWithId(int valveId) {
     Datagram* request = new Datagram(valveId, CLOSE_VALVE, NOOP);
     cgp->sendDatagram(request);
     delete request;
-    cgp->getAndProcessDatagram();
+    cgp->getAndProcessDatagram(SERIAL_TIMEOUT);
     bool success = lastDatagramReceived != NULL && lastDatagramReceived->command == CLOSE_VALVE;
     delete lastDatagramReceived;
     lastDatagramReceived = NULL;
@@ -47,7 +47,7 @@ bool ValveController::assignValveId(int id) {
   Datagram* request = new Datagram(FIRST_UNIDENTIFIED, SET_ID, id);
   cgp->sendDatagram(request);
   delete request;
-  cgp->getAndProcessDatagram();
+  cgp->getAndProcessDatagram(SERIAL_TIMEOUT);
   bool success = lastDatagramReceived != NULL && lastDatagramReceived->command == SET_ID;
   delete lastDatagramReceived;
   lastDatagramReceived = NULL;
@@ -61,7 +61,7 @@ vector<int>* ValveController::identifyAllSlaves() {
 
     vector<int>* valveIds = new vector<int>();
     while (true) {
-      cgp->getAndProcessDatagram(1000);
+      cgp->getAndProcessDatagram(SERIAL_TIMEOUT);
       if (lastDatagramReceived == NULL || lastDatagramReceived->command == END_OF_CHAIN) {
         delete lastDatagramReceived;
         lastDatagramReceived = NULL;
