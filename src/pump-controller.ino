@@ -3,10 +3,14 @@
 #include "Constants.h"
 #include <vector>
 #include "ValveController.h"
+#include "MQTT.h"
 
 int PUMP = A3;
 ValveController* valveController;
 CGP* cgp;
+
+byte mqttHost[] = { 192,168,86,100 };
+MQTT mqttClient(mqttHost, 1883, mqttCallback);
 
 void activatePump() {
     analogWrite(PUMP, 4095);
@@ -47,10 +51,20 @@ int execute(String json) {
           deactivatePump();
           if (!valveController->closeValveWithId(valveId))
             break;
+
+          mqttClient.publish("dionysus/irrigation", "{device_id\": \"dozen_laser\", \"valve_id\":" + String(valveId) + ", \"value\":" + String(duration) + "}");
         }
     }
     return totalDuration;
  }
+
+void mqttCallback(char* topic, byte* payload, unsigned int length) {
+   char json[length + 1];
+   memcpy(json, payload, length);
+   json[length] = NULL;
+   execute(json);
+}
+
 
 void setup() {
     Particle.function("identify", identify);
@@ -63,6 +77,17 @@ void setup() {
 
     vector<int>* valveIds = valveController->identifyAllSlaves();
     Particle.publish("valves", generateJsonForIds(valveIds));
+
+    // connect to the server
+    mqttClient.connect("sparkclient");
+
+    // publish/subscribe
+    if (mqttClient.isConnected()) {
+        mqttClient.subscribe("dionysus/dozen_laser");
+    }
 }
 
-void loop() {}
+void loop() {
+  if (mqttClient.isConnected())
+      mqttClient.loop();
+}
