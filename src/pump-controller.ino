@@ -5,6 +5,8 @@
 #include "ValveController.h"
 #include "MQTT.h"
 
+#define DEBUG false
+
 int PUMP = A3;
 ValveController* valveController;
 CGP* cgp;
@@ -29,11 +31,9 @@ String generateJsonForIds(vector<int>* ids) {
   return idsString;
 }
 
-int identify(String arg) {
+void identify() {
   vector<int>* valveIds = valveController->identifyAllSlaves();
-  Particle.publish("valves", generateJsonForIds(valveIds));
-
-  return 1;
+  mqttClient.publish("dionysus/valves", generateJsonForIds(valveIds));
 }
 
 int execute(String json) {
@@ -44,12 +44,12 @@ int execute(String json) {
     for (int i = 0; i < valves.size(); i++) {
         int valveId = valves[i]["id"];
         int duration = valves[i]["d"];
-        if (valveController->openValveWithId(valveId)) {
+        if (DEBUG || valveController->openValveWithId(valveId)) {
           totalDuration += duration;
           activatePump();
           delay(duration*1000);
           deactivatePump();
-          if (!valveController->closeValveWithId(valveId))
+          if (!DEBUG && !valveController->closeValveWithId(valveId))
             break;
 
           mqttClient.publish("dionysus/irrigation", "{device_id\": \"dozen_laser\", \"valve_id\":" + String(valveId) + ", \"value\":" + String(duration) + "}");
@@ -62,22 +62,19 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
    char json[length + 1];
    memcpy(json, payload, length);
    json[length] = NULL;
+   mqttClient.publish("dionysus/debug", "Received command");
+
    execute(json);
 }
 
 
 void setup() {
-    Particle.function("identify", identify);
     Particle.function("execute", execute);
     pinMode(PUMP, OUTPUT);
     Serial.begin(9600);
     Serial1.begin(9600);
 
     valveController = new ValveController(&Serial1);
-
-    vector<int>* valveIds = valveController->identifyAllSlaves();
-    Particle.publish("valves", generateJsonForIds(valveIds));
-
     // connect to the server
     mqttClient.connect("sparkclient");
 
@@ -85,9 +82,19 @@ void setup() {
     if (mqttClient.isConnected()) {
         mqttClient.subscribe("dionysus/dozen_laser");
     }
+
+    vector<int>* valveIds = valveController->identifyAllSlaves();
+    mqttClient.publish("dionysus/debug", generateJsonForIds(valveIds));
 }
 
 void loop() {
-  if (mqttClient.isConnected())
-      mqttClient.loop();
+  if (mqttClient.isConnected()) {
+    mqttClient.loop();
+  } else {
+      mqttClient.connect("sparkclient");
+      if (mqttClient.isConnected()) {
+          mqttClient.subscribe("dionysus/dozen_laser");
+      }
+  }
+  delay(1000);
 }
