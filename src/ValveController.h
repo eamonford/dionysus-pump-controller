@@ -3,6 +3,7 @@
 
 #include "Particle.h"
 #include "chain-gang-protocol.h"
+#include <vector>
 
 using namespace std;
 

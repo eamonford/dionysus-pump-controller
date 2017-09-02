@@ -6,6 +6,8 @@
 #include "MQTT.h"
 
 #define DEBUG false
+// If DEGUG is enabled, no commands will be sent to valves
+// but the pump will otherwise act as normal
 
 int PUMP = A3;
 ValveController* valveController;
