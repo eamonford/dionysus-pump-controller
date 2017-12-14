@@ -62,16 +62,16 @@ vector<int>* ValveController::identifyAllSlaves() {
     vector<int>* valveIds = new vector<int>();
     while (true) {
       cgp->getAndProcessDatagram(SERIAL_TIMEOUT);
-      if (lastDatagramReceived == NULL || lastDatagramReceived->command == END_OF_CHAIN) {
+      if (lastDatagramReceived->command == IDENTIFY) {
+        // if a valve is unidentified, mark it as needing to be assigned an ID
+        valveIds->push_back(lastDatagramReceived->arg);
+      } else {
+        // if we receive nothing back (NULL), end the loop. same thing if we receive
+        // any message other than IDENTIFY, which is probably noise
         delete lastDatagramReceived;
         lastDatagramReceived = NULL;
         break;
-      } else if (lastDatagramReceived->command == IDENTIFY) {
-        // if a valve is unidentified, mark it as needing to be assigned an ID
-        valveIds->push_back(lastDatagramReceived->arg);
       }
-      delete lastDatagramReceived;
-      lastDatagramReceived = NULL;
     }
 
     for (int i = 0; i < valveIds->size(); i++) {
