@@ -54,7 +54,7 @@ int execute(String json) {
           if (!DEBUG && !valveController->closeValveWithId(valveId))
             break;
 
-          mqttClient.publish("dionysus/irrigation", "{device_id\": \"dozen_laser\", \"valve_id\":" + String(valveId) + ", \"value\":" + String(duration) + "}");
+          mqttClient.publish("dionysus/events", "{\"device_id\": \"dozen_laser\", \"valveId\":" + String(valveId) + ", \"value\":" + String(duration) + "}");
         }
     }
     return totalDuration;
@@ -85,8 +85,12 @@ void setup() {
         mqttClient.subscribe("dionysus/dozen_laser");
     }
 
-    vector<int>* valveIds = valveController->identifyAllSlaves();
-    mqttClient.publish("dionysus/debug", generateJsonForIds(valveIds));
+    if (DEBUG == true) {
+      mqttClient.publish("dionysus/debug", "Debug mode is ON");
+    } else {
+      vector<int>* valveIds = valveController->identifyAllSlaves();
+      mqttClient.publish("dionysus/debug", generateJsonForIds(valveIds));
+    }
 }
 
 void loop() {
